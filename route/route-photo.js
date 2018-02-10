@@ -43,13 +43,17 @@ module.exports = function(router) {
     })
 
     .get(bearer_auth_middleware, (req, res) => {
-      if (req.params){
+      if (req.params.id){
         return Photo.findById(req.params.id)
           .then(img => res.status(200).json(img))
           .catch(err => errorHandler(err,res));          
       }
-      return Photo.find({user_id: req.user.user_id})
-        .then(imgs => imgs.map(img => img._id))
+      debug('req.user.user_id', req.user._id);
+      return Photo.find({user_id: req.user._id})
+        .then(imgs => {
+          debug('imgs', imgs);
+          return imgs.map(img => img._id);
+        })
         .then(img_ids => res.status(200).json(img_ids))
         .catch(err => errorHandler(err, res));
     })
