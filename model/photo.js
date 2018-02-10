@@ -59,14 +59,14 @@ Photo.statics.upload = function(req) {
 
 Photo.methods.delete = function() {
   return new Promise((resolve, reject) => {
-
+    debug('photo delete', this);
     let params = {
-      ACL: 'public-read',
       Bucket: process.env.AWS_BUCKET,
       Key: this.cloud_key,
     };
 
     return(aws3.deleteProm(params))
+      .then(data => debug('data', data))
       .then(this.remove())
       .then(resolve)
       .catch(reject);

@@ -9,9 +9,8 @@ const debug = require('debug')('http:route-photo');
 //upload dependencies
 const tempDir = `${__dirname}/../temp`;
 const multer = require('multer');
-const upload = multer({dest: tempDir});
-//const upload = multer({dest: tempDir}).single('image');
-//const reqLog = require('../lib/req-logger');
+//const upload = multer({dest: tempDir});
+const upload = multer({dest: tempDir}).single('image');
 
 debug('tempDir', tempDir);
 
@@ -19,34 +18,54 @@ module.exports = function(router) {
 
   router.route('/photo/:id?')
 
-    .post(bearer_auth_middleware, bodyParser, upload.single('image'), (req, res) => {
-      // upload(req, res, err => err ? debug('multer error', err) : debug('cool'));
-      debug('photo post', 'req');
-      return Photo.upload(req)
-        .then(data => new Photo(data).save())
-        .then(img => res.status(201).json(img))
-        .catch(err => errorHandler(err,res));
+    // .post(bearer_auth_middleware, bodyParser, upload.single('image'), (req, res) => {
+    //   return Photo.upload(req)
+    //     .then(data =>new Photo(data).save())
+    //     .then(img => res.status(201).json(img))
+    //     .catch(err => errorHandler(err,res));
+    // })
+
+    .post(bearer_auth_middleware, bodyParser, (req, res) => {
+      return upload(req, res, err => { 
+        debug('err', err);
+        if(err) return errorHandler(err, res);
+        return multiPart(req, res);
+      });
+      function multiPart(req, res) {
+        Photo.upload(req)
+          .then(data => {
+            debug('data', data);
+            return new Photo(data).save();
+          })
+          .then(img => res.status(201).json(img))
+          .catch(err => errorHandler(err,res));
+      }
     })
 
     .get(bearer_auth_middleware, (req, res) => {
-      if (req.params){
+      if (req.params.id){
         return Photo.findById(req.params.id)
           .then(img => res.status(200).json(img))
           .catch(err => errorHandler(err,res));          
       }
-      return Photo.find({user_id: req.user.user_id})
-        .then(imgs => imgs.map(img => img._id))
+      debug('req.user.user_id', req.user._id);
+      return Photo.find({user_id: req.user._id})
+        .then(imgs => {
+          debug('imgs', imgs);
+          return imgs.map(img => img._id);
+        })
         .then(img_ids => res.status(200).json(img_ids))
         .catch(err => errorHandler(err, res));
     })
 
     .delete(bearer_auth_middleware, (req, res) => {
-      Photo.findById(req.params.id) //find one
+      debug('req.params.id', req.params.id);
+      return Photo.findById(req.params.id) //find one
         .then(img => {
-          if (img.user_id !== req.user._id) return new Error('Authorization Error: permission denied');
+          if (img.user_id.toString() !== req.user._id.toString()) return new Error('Authorization Error: permission denied');
           return img.delete();
         })
-        .then(() => res.statusSend(204))
+        .then(() => res.sendStatus(204))
         .catch(err => errorHandler(err, res));
     });
 
