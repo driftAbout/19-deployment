@@ -78,7 +78,8 @@ mock.photo.create_photo = () => {
   return mock.photo.photo_data()
     .then(photo_data => {
       let uuid_name = uuid();
-      reqPhoto.user = {_id: photo_data.user_id.toString()},
+      //reqPhoto.user = {_id: photo_data.user_id.toString()},
+      reqPhoto.user = photo_data.user_data.user,
       reqPhoto.file =  {
         filename: uuid_name,
         path: `${tempProdDir}/${uuid_name}`,
@@ -89,20 +90,21 @@ mock.photo.create_photo = () => {
         description: photo_data.description,
         gallery_id: photo_data.gallery_id,
       };
-      return photo_data;
+      mock.photo.data = photo_data;
+      return;
     })
-    .then(photo_data => {
-      debug('reqPhoto', reqPhoto);
-      return fs.copyFileProm(photo_data.file, reqPhoto.file.path);
+    .then(() => {
+      return fs.copyFileProm(mock.photo.data.file, reqPhoto.file.path);
     })
-    .then(() => reqPhoto);
+    .then(() => {
+      return Photo.upload(reqPhoto)
+        .then(data => new Photo(data).save())
+        .then(photo => {
+          mock.photo.data.photo = photo;
+          return mock.photo.data;
+        });
+    });
 };
-
-// req.file.path
-// req.file.originalname
-// req.file.filename
-// req.body.description
-// req.body.gallery_id,
 
 mock.photo.photo_data = () => {
   return mock.gallery.create_gallery()
@@ -118,7 +120,6 @@ mock.photo.photo_data = () => {
       return mock.photo.write_photo(photo_data);
     })
     .catch(err => err);
-
 };
 
 mock.photo.write_photo = (data) => {
@@ -126,4 +127,8 @@ mock.photo.write_photo = (data) => {
   return fs.writeFileProm(file, file)
     .then(() => data)
     .catch(err => err);
+};
+
+mock.photo.find_photo = (photo_id) => {
+  return Photo.findOne(photo_id);
 };

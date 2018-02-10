@@ -4,7 +4,6 @@ const debug = require('debug')('http:photo-get-test');
 const server = require('../../lib/server');
 const superagent = require('superagent');
 const mock = require('../lib/mock');
-const Auth = require('../../model/auth');
 const del = require('del');
 require('jest');
 
@@ -13,26 +12,22 @@ describe('GET Integration', function() {
   afterAll(() => server.stop());
   afterAll(mock.removeUsers);
   afterAll(mock.removeGalleries);
-
+  afterAll(() => del(this.data.file));
 
   this.url = `:${process.env.PORT}/api/v1`;
-  
-  // afterAll(() => {
-  //   del(this.photo_data.file);
-  // });
- 
+
+  beforeAll(() => {
+    return mock.photo.create_photo()
+      .then(data => { 
+        this.data = data;
+      });
+  });
+
   describe('Valid requests', () => {
    
     beforeAll(() => {
-      return mock.photo.create_photo()
-        .then(photo => { 
-          this.photo = photo;
-        });
-    });
-  
-    beforeAll(() => {
-      return  superagent.get(`${this.url}/photo/${this.photo_id}`)
-        .set('Authorization', `Bearer ${this.photo.user.token}`)
+      return  superagent.get(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
         .then( res => {
           this.resGet = res;
         })
@@ -41,21 +36,56 @@ describe('GET Integration', function() {
         });
     });
 
-    it.only('should return status code 200', () => {
-      debug ('this.photo', this.photo);
+    it('should return status code 200', () => {
       expect(this.resGet.status).toEqual(200);
     });
 
-    it('should not contain a password in the req.auth', () => {
-      expect(this.resGet.res.req.auth).toBeUndefined();
+    it('should should have image data in the body', () => {
+      expect(this.resGet.body.user_id).toEqual(this.data.user_data.user._id.toString());
+      expect(this.resGet.body.gallery_id).toEqual(this.data.gallery_id);
+      expect(this.resGet.body.image_url).not.toBeNull;
     });
+
+    describe('Valid requests get all', () => {
+      beforeAll(() => {
+        return  superagent.get(`${this.url}/photo`)
+          .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+          .then( res => {
+            this.resGet = res;
+            expect(this.resGet.body).toEqual(expect.arrayContaining([`${this.data.photo._id}`])); 
+          })
+          .catch(err => {
+            debug('superagent error ', err);
+          });
+      });
     
-    it('should should have a token in the response body that can be parsed and decoded', () => {
-      let tokenObj = Buffer.from(this.resGet.body.split('.')[1], 'base64').toString();
-      debug('tokenObj', tokenObj);
-      expect(JSON.parse(tokenObj).hasOwnProperty('jwt')).toBe(true);
+      it('should should have an array of image data in the body', () => {  
+        expect(this.resGet.body).toEqual(expect.arrayContaining([`${this.data.photo._id}`])); 
+      });
+    
     });
-    
+
   });
 
+  describe('invalid requests', () => {
+
+    it('should return 404 for a get request to a bad path', () => {
+      return  superagent.get(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(404));
+    });
+
+    it('should return 401 for a get request with bad credentials', () => {
+      return superagent.get(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer error${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(401));
+    });
+
+    it('should return 404 for a get request with a bad photo id', () => {
+      return  superagent.get(`${this.url}/photo/${this.data.photo._id.toString()}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(401));
+    });
+
+  });
 });
