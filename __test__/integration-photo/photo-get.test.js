@@ -38,7 +38,6 @@ describe('GET Integration', function() {
     });
 
     it.only('should return status code 200', () => {
-      debug('resGet.body', this.resGet.body);
       expect(this.resGet.status).toEqual(200);
     });
 
