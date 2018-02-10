@@ -4,9 +4,10 @@ const debug = require('debug')('http:photo-delete-test');
 const server = require('../../lib/server');
 const superagent = require('superagent');
 const mock = require('../lib/mock');
-const Auth = require('../../model/auth');
 const del = require('del');
 require('jest');
+
+debug('photo delete');
 
 describe('photo DELETE Integration', function() {
   beforeAll(() => server.start());
