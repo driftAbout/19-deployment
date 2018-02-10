@@ -18,36 +18,76 @@ describe('photo DELETE Integration', function() {
 
   this.url = `:${process.env.PORT}/api/v1`;
    
+  beforeAll(() => {
+    return mock.photo.create_photo()
+      .then(data => { 
+        this.data = data;
+      });
+  });
+
+  beforeAll(() => {
+    mock.auth.createUser()
+      .then(new_user => { 
+        this.new_user = new_user;
+      });
+  });
+
+  
+
   describe('Valid requests', () => {
-   
+    
     beforeAll(() => {
-      return mock.photo.create_photo()
-        .then(data => { 
-          this.data = data;
-        });
+      return  superagent.delete(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .then(res => this.deleteRes = res);       
+    });
+   
+    it('should return status code 204', () => {
+      expect(this.deleteRes.status).toEqual(204);
     });
 
-    describe('photo DELETE /api/v1/note/:id?', () => {
-      
-      beforeAll(() => {
-        return  superagent.delete(`${this.url}/photo/${this.data.photo._id}`)
-          .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
-          .then(res => this.deleteRes = res);       
-      });
-      //beforeAll(() => {
-      //   return superagent.get(`:4000/api/v1/note/${this.resPost.body.id}`)
-      //     .catch(err => this.deleteGet = err);       
-      // });
+    it('should have an empty response body', () => {
+      expect(Object.keys(this.deleteRes.body).length).toBe(0);
+    });
 
-      // it('should return status 404', () => {
-      //   debug('this.deleteGet.body', this.deleteGet.status);
-      //   expect(this.deleteGet.status).toEqual(404);
-      // });
-
-      it.only('should return status code 204', () => {
-        expect(this.deleteRes.status).toEqual(204);
-      });
+    it('should not be avbailable on S3, return 403', () => {
+      return  superagent.delete(`${this.data.photo.image_url}`)
+        .catch(err => {
+          expect(err.status).toEqual(403);
+        });
     });
   });
 
+  describe('Invalid requests', () => {
+    
+    it('should return 404 for a delete request to a bad path', () => {
+      return  superagent.delete(`${this.url}/photoERROR/${this.data.photo._id}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(404));
+    });
+
+    it('should return 401 for a delete request with bad credentials', () => {
+      return superagent.delete(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer error${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(401));
+    });
+
+    it('should return 404 for a delete request with a bad photo id', () => {
+      return  superagent.delete(`${this.url}/photo/${this.data.photo._id}error`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(400));
+    });
+
+    it('should return 404 for a delete request with a photo id that does not exist', () => {
+      return  superagent.delete(`${this.url}/photo/5a7f57e126d3de182ba57492`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(400));
+    });
+
+    it('should return 401 for a delete request from a user that does not own the photo', () => {
+      return superagent.delete(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer error${this.new_user.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(401));
+    });
+  });
 });

@@ -81,10 +81,16 @@ describe('GET Integration', function() {
         .catch(err => expect(err.response.status).toEqual(401));
     });
 
-    it('should return 404 for a get request with a bad photo id', () => {
+    it('should return 404 for a get request with a photo id that does not exist', () => {
       return  superagent.get(`${this.url}/photo/${this.data.photo._id.toString()}`)
         .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
         .catch(err => expect(err.response.status).toEqual(401));
+    });
+
+    it('should return 400 for a get request with a photo id that is malformed', () => {
+      return  superagent.get(`${this.url}/photo/${this.data.photo._id}error`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
+        .catch(err => expect(err.response.status).toEqual(400));
     });
 
   });

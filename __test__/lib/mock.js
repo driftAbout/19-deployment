@@ -19,14 +19,18 @@ mock.auth = {};
 mock.gallery = {};
 mock.photo = {};
 
-mock.user = {
-  username: `${faker.name.prefix()}${faker.hacker.adjective()}`.replace(/[.\s]/, ''),
-  email: `${faker.internet.email()}`,
-  password:`${faker.hacker.adjective()}${faker.hacker.noun()}`.replace(/[.\s]/, ''),
+mock.new_user = () => {
+  return {
+    username: `${faker.name.prefix()}${faker.hacker.adjective()}`.replace(/[.\s]/, ''),
+    email: `${faker.internet.email()}`,
+    password:`${faker.hacker.adjective()}${faker.hacker.noun()}`.replace(/[.\s]/, ''),
+  };
 };
 
 mock.auth.createUser = () => {
   let auth_data = {};
+  mock.user = mock.new_user();
+  debug('mock.user', mock.user);
   auth_data.password = mock.user.password;
   let newUser = Auth({username: mock.user.username, email: mock.user.email});
   return newUser.createHashedpassword(auth_data.password)
@@ -37,7 +41,7 @@ mock.auth.createUser = () => {
       auth_data.user_token = token;
       return auth_data;
     })
-    .catch(console.err);
+    .catch(err => err);
 };
 
 mock.removeUsers = () => Promise.all([Auth.remove()]); 
