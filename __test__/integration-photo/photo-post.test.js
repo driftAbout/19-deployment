@@ -14,6 +14,7 @@ describe('photo POST Integration', function() {
   afterAll(() => server.stop());
   afterAll(mock.removeUsers);
   afterAll(mock.removeGalleries);
+  afterAll(() => del(this.photo_data.file));
  
   this.url = `:${process.env.PORT}/api/v1`;
   describe('Valid requests', () => {
@@ -39,8 +40,6 @@ describe('photo POST Integration', function() {
         })
         .catch(console.error);
     });
-
-    afterAll(() => del(this.photo_data.file));
 
     debug('this.photo_data', this.photo_data);
 
@@ -88,6 +87,15 @@ describe('photo POST Integration', function() {
         .field('description', this.photo_data.description)
         .field('gallery_id', this.photo_data.gallery_id)
         .catch(err => expect(err.response.status).toEqual(401));
+    });
+
+    it('should return 400 for a post missing an field, i.e. name', () => {
+      return superagent.post(`${this.url}/photo`)
+        .set('Authorization', `Bearer ${this.photo_data.user_data.user_token}`)
+        .field('description', this.photo_data.description)
+        .field('gallery_id', this.photo_data.gallery_id)
+        .attach('image', this.photo_data.file)
+        .catch(err => expect(err.response.status).toEqual(400));
     });
 
   });
