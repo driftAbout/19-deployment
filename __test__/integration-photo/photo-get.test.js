@@ -13,26 +13,22 @@ describe('GET Integration', function() {
   afterAll(() => server.stop());
   afterAll(mock.removeUsers);
   afterAll(mock.removeGalleries);
-
+  afterAll(() => del(this.data.file));
 
   this.url = `:${process.env.PORT}/api/v1`;
-  
-  // afterAll(() => {
-  //   del(this.photo_data.file);
-  // });
- 
+   
   describe('Valid requests', () => {
    
     beforeAll(() => {
       return mock.photo.create_photo()
-        .then(photo => { 
-          this.photo = photo;
+        .then(data => { 
+          this.data = data;
         });
     });
   
     beforeAll(() => {
-      return  superagent.get(`${this.url}/photo/${this.photo_id}`)
-        .set('Authorization', `Bearer ${this.photo.user.token}`)
+      return  superagent.get(`${this.url}/photo/${this.data.photo._id}`)
+        .set('Authorization', `Bearer ${this.data.user_data.user_token}`)
         .then( res => {
           this.resGet = res;
         })
@@ -42,7 +38,7 @@ describe('GET Integration', function() {
     });
 
     it.only('should return status code 200', () => {
-      debug ('this.photo', this.photo);
+      debug('resGet.body', this.resGet.body);
       expect(this.resGet.status).toEqual(200);
     });
 
