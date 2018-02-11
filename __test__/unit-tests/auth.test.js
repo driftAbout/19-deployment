@@ -48,6 +48,17 @@ describe('NOTE unit testing', function() {
           expect(valid.username).toEqual(this.mockItem.username);
         });
     });
+  
+    it('should return an undefined when hashed password does not match original with the comparePasswords method', () => {
+      return this.auth.comparePasswords('crazy')
+        .catch(err => expect(err.message).toMatch(/authorization/i));
+    });
+
+    it('should return an error when the password is an object with the comparePasswords method', () => {
+      this.auth.comparePasswords({id:'a'})
+        .catch(err => expect(err.message).toMatch(/data and hash/i));
+    });
+
   }); 
 
   describe('Test object', function() {

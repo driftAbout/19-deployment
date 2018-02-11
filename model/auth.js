@@ -25,18 +25,6 @@ Auth.methods.createHashedpassword = function(password){
     .catch(err => err);
 };
 
-// Auth.methods.comparePasswords = function(password) {
-//   debug('password', password);
-//   return bcrypt.compare(password, this.password)
-//     .then(valid => {
-//       debug('valid before:', valid);
-//       if(!valid) return Promise.reject(new Error('Authorization Error: invalid password'));
-//       debug('valid after:', valid);
-//       return Promise.resolve(this);
-//     })
-//     .catch(err => err);
-// };
-
 Auth.methods.comparePasswords = function(password) {
   return new Promise((resolve, reject) => { 
     bcrypt.compare(password, this.password, (err, valid) => {
