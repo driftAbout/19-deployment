@@ -48,6 +48,27 @@ describe('GET Integration', function() {
     it('should should have the id of the user making thr request in the body', () => {
       expect(this.resGet.body.user_id.toString()).toEqual(this.gallery_data.user_data.user._id.toString());
     });
+
+    describe('Valid requests all galleries', () => {
+
+      beforeAll(() => {
+        return  superagent.get(`${this.url}/gallery`)
+          .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+          .then( res => {
+            this.resGet = res;
+          })
+          .catch(err =>  {
+            debug('superagent error ', err);
+            return err;
+          });   
+      });
+
+      it('Should return an array of galleries', () => {
+        expect(this.resGet.body).toBeInstanceOf(Array);
+        expect(this.resGet.body.length).not.toBe(0);
+        expect(this.resGet.body).toEqual(expect.arrayContaining([this.gallery_data.gallery._id.toString()]));
+      });
+    });
     
   });
 
@@ -86,21 +107,12 @@ describe('GET Integration', function() {
         .set('Authorization', `Bearer ${this.new_gallery_data.user_data.user_token}`)
         .catch(err => expect(err.status).toEqual(401));
     });
-      
 
-       //   it('should return status code 200', () => {
-      //     return  superagent.get(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
-      //       .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
-      //       .then( res => {
-      //         this.resGet = res;
-      //       })
-      //       .catch(err => {
-      //         debug('superagent error ', err);
-      //       });
-    
-      //       expect(this.resGet.status).toEqual(200);
-      //     });
-
+    it('should return status code 400 for a galleries request when there are no galleries', () => {
+      return  superagent.get(`${this.url}/gallery`)
+        .set('Authorization', `Bearer ${this.new_gallery_data.user_data.user_token}`)
+        .catch(err => expect(err.status).toEqual(400));
+    });
   });
 
 });

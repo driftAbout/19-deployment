@@ -30,13 +30,12 @@ module.exports = function(router) {
           .then(gallery => res.status(200).json(gallery))
           .catch(err => errorHandler(err, res));
       }
-
+      debug(' req.user._id',  req.user._id, 'req.params.id', req.params.id);
       return Gallery.find({
         user_id: req.user._id,
-        _id: req.params.id,
       })
         .then(galleries => {
-          if(!galleries.length) return new Error('Bad request');
+          if(!galleries.length) return Promise.reject(new Error('Bad request'));
           res.status(200).json(galleries.map(gallery => gallery._id));
         })
         .catch(err => errorHandler(err, res));
