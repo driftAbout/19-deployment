@@ -47,10 +47,15 @@ module.exports = function(router) {
         _id: req.params.id,
       })
         .then(gallery => {
-          if(!gallery) return new Error('Bad request');
-          if (!req.body.title && !req.body.description) return new Error('Validation Error: invalid update');
-          return gallery.set(req.body).save();
+          if(!gallery) return Promise.reject(new Error('Error ENOENT: Not Found'));
+          if (!req.body.title && !req.body.description) return Promise.reject(new Error('Validation Error: invalid update'));
+          let newData = {
+            title: req.body.title || gallery.title,
+            description: req.body.description || gallery.description,
+          };
+          return gallery.set(newData).save();
         })
+        .then(() => res.sendStatus(204))
         .catch(err => errorHandler(err, res));
     })
 

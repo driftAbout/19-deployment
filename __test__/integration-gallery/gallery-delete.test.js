@@ -8,6 +8,8 @@ require('jest');
 describe('DELETE Integration', function() {
   beforeAll(() => server.start(process.env.PORT), () => console.log(process.env.PORT));
   afterAll(() => server.stop());
+  afterAll(mock.removeUsers);
+  afterAll(mock.removeGalleries);
   
   describe('Valid requests', () => {
 
