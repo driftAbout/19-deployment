@@ -133,6 +133,18 @@ mock.photo.write_photo = (data) => {
     .catch(err => err);
 };
 
-mock.photo.find_photo = (photo_id) => {
-  return Photo.findOne(photo_id);
+mock.photo.find_photo = (id) => {
+  return Photo.findOne(id);
+};
+
+mock.gallery.find_gallery = (id) => {
+  return Gallery.findOne(id);
+};
+
+mock.gallery.delete_one_gallery = (id) => {
+  return Gallery.findOne(id)
+    .then(gallery => {
+      if (gallery) gallery.remove();
+    })
+    .catch(err => err);
 };
