@@ -42,10 +42,10 @@ describe('NOTE unit testing', function() {
       expect(this.auth.password).not.toEqual(this.password);
     });
 
-    it('should return true when comparing hashed password to original with the comparePasswords method', () => {
+    it('should return the record  when comparing hashed password to original with the comparePasswords method when true', () => {
       this.auth.comparePasswords(this.password)
         .then(valid => {
-          expect(valid).toBe(true);
+          expect(valid.username).toEqual(this.mockItem.username);
         });
     });
   }); 
