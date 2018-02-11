@@ -10,7 +10,6 @@ require('jest');
 describe('Gallery POST Integration', function() {
   beforeAll(() => server.start());
   afterAll(() => server.stop());
-
   afterAll(mock.removeUsers);
   afterAll(mock.removeGalleries);
 
@@ -28,11 +27,9 @@ describe('Gallery POST Integration', function() {
       });
   });
   
-  this.url = ':4000/api/v1';
+  this.url = `:${process.env.PORT}/api/v1`;
   
   describe('Valid requests', () => {
-
-   
 
     beforeAll(() => {
       debug('gallery_data', this.gallery_data.user_token);
@@ -49,26 +46,23 @@ describe('Gallery POST Integration', function() {
 
     describe('POST /api/v1/gallery', () => {
 
-      it.only('should post with 201', () => {
+      it('should post with 201', () => {
         expect(this.resPost.status).toEqual(201);
       });
-      it('should should have a token in the response body', () => {
+      it('should should have a response body', () => {
         debug('this.resPost.body', this.resPost.body);
         expect(this.resPost.body).not.toBeNull;
       });
 
-      it('should should have a token in the response body that can be parsed and decoded', () => {
-        let tokenObj = Buffer.from(this.resPost.body.split('.')[1], 'base64').toString();
-        debug('tokenObj', tokenObj);
-        expect(JSON.parse(tokenObj).hasOwnProperty('jwt')).toBe(true);
+      it('should should have a title and description in the body that match the input', () => {
+        expect(this.resPost.body.title).toEqual(this.gallery_data.title);
+        expect(this.resPost.body.description).toEqual(this.gallery_data.description);
       });
 
       it('should have created a record in the database', () => {
-        debug(' this.user.username',  this.user.username);
-        return Auth.findOne({username: this.user.username})
-          .then(user => {
-            debug('user.email', user.email);
-            expect(user.email).toEqual(this.user.email);
+        return  mock.gallery.find_gallery({_id: this.resPost.body._id})
+          .then(gallery => {
+            expect(gallery._id.toString()).toEqual(this.resPost.body._id.toString());
           })
           .catch(console.error);
 
