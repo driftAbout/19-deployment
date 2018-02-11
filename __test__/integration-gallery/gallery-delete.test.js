@@ -51,6 +51,35 @@ describe('DELETE Integration', function() {
     });
 
   });
+
+  beforeAll(() => {
+    return mock.gallery.create_gallery()
+      .then(gallery_data => { 
+        this.new_gallery_data = gallery_data;
+      });
+  });
+
+  describe('Invalid requests', () => {
+
+    it('should return a 404 for a delete request to a bad path', () => {
+      return  superagent.delete(`${this.url}/galleryError/${this.gallery_data.gallery._id}`)
+        .catch(err => expect(err.status).toEqual(404));
+    });
+
+    it('should return status code 404 for a gallery that does not exist', () => {
+      return  superagent.delete(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+        .send(this.mock_data)
+        .catch(err => expect(err.status).toEqual(404));
+    });
+
+    it('should return status code 401 for a gallery DELETE request that does belong to the requestor', () => {
+      return  superagent.get(`${this.url}/gallery/${this.new_gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+        .catch(err => expect(err.status).toEqual(401));
+    });
+
+  });
  
 
 });
