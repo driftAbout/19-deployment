@@ -23,14 +23,11 @@ module.exports = function(router) {
       if(req.params.id){
         return Gallery.findById(req.params.id)
           .then(gallery => {
-            if(!gallery) return Promise.reject(new Error('Bad request'));
+            if(!gallery) return Promise.reject(new Error('Error ENOENT: Not Found'));
             if (gallery.user_id.toString() !== req.user._id.toString()) return Promise.reject(new Error('Authorization Failed: permission denied'));
             return gallery;
           })
-          .then(gallery => {
-            debug('gallery', gallery);
-            res.status(200).json(gallery);
-          })
+          .then(gallery => res.status(200).json(gallery))
           .catch(err => errorHandler(err, res));
       }
 

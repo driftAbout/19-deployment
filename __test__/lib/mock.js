@@ -140,3 +140,11 @@ mock.photo.find_photo = (id) => {
 mock.gallery.find_gallery = (id) => {
   return Gallery.findOne(id);
 };
+
+mock.gallery.delete_one_gallery = (id) => {
+  return Gallery.findOne(id)
+    .then(gallery => {
+      if (gallery) gallery.remove();
+    })
+    .catch(err => err);
+};

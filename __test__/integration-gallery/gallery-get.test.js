@@ -51,4 +51,56 @@ describe('GET Integration', function() {
     
   });
 
+  describe('Inalid requests', () => {
+
+    beforeAll(() => {
+      return mock.gallery.create_gallery()
+        .then(gallery_data => { 
+          this.new_gallery_data = gallery_data ;
+          return mock.gallery.delete_one_gallery(gallery_data.gallery._id);
+        });
+    });
+
+    it('should return status code 404', () => {
+      return  superagent.get(`${this.url}/galleryError/${this.gallery_data.gallery._id}`)
+        .catch(err => expect(err.status).toEqual(404));
+    });
+
+    it('should return status code 401 when making a get request with bad user data', () => {
+      return  superagent.get(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}error`)
+        .then( res => {
+          this.resGet = res;
+        })
+        .catch(err => expect(err.status).toEqual(401));
+    });
+
+    it('should return status code 404 for a gallery that does not exist', () => {
+      return  superagent.get(`${this.url}/gallery/${this.new_gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+        .catch(err => expect(err.status).toEqual(404));
+    });
+
+    it('should return status code 401 for a gallery request that does belong to the requestor', () => {
+      return  superagent.get(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.new_gallery_data.user_data.user_token}`)
+        .catch(err => expect(err.status).toEqual(401));
+    });
+      
+
+       //   it('should return status code 200', () => {
+      //     return  superagent.get(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
+      //       .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+      //       .then( res => {
+      //         this.resGet = res;
+      //       })
+      //       .catch(err => {
+      //         debug('superagent error ', err);
+      //       });
+    
+      //       expect(this.resGet.status).toEqual(200);
+      //     });
+
+  });
+
 });
