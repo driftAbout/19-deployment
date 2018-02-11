@@ -60,11 +60,16 @@ module.exports = function(router) {
     })
 
     .delete(bearer_auth_middleware, (req, res) => {
-      return Gallery.findById(req.params.id)
+      return Gallery.findOne({
+        user_id: req.user._id,
+        _id: req.params.id,
+      })
         .then(gallery => {
-          if(!gallery) return new Error('Bad request');
-          if (gallery.user_id !== req.user._id) return new Error('Authorization Failed: permission denied');
-          return gallery.remove();
+          if(!gallery) return Promise.reject(new Error('Error ENOENT: Not Found'));
+          if (gallery.user_id.toString() !== req.user._id.toString() ) return Promise.reject(new Error('Authorization Failed: permission denied'));
+          debug('gallery', gallery);
+          return gallery.remove()
+            .then(() => res.sendStatus(204));
         })
         .catch(err => errorHandler(err, res));
     });
