@@ -12,11 +12,10 @@ describe('GET Integration', function() {
   afterAll(mock.removeUsers);
   afterAll(mock.removeGalleries);
 
-  this.url = ':4000/api/v1';
+  this.url = `:${process.env.PORT}/api/v1`;
   
   describe('Valid requests', () => {
    
-    
     beforeAll(() => {
       return mock.gallery.create_gallery()
         .then(gallery_data => { 
@@ -36,18 +35,18 @@ describe('GET Integration', function() {
         });
     });
 
-    it.only('should return status code 200', () => {
+    it('should return status code 200', () => {
       expect(this.resGet.status).toEqual(200);
     });
 
-    it('should not contain a password in the req.auth', () => {
-      expect(this.resGet.res.req.auth).toBeUndefined();
+    it('should not contain an object with data from a gallery in the req.body', () => {
+      debug('this.resGet.body.', this.resGet.body);
+      expect(this.resGet.body.title).toEqual(this.gallery_data.gallery.title);
+      expect(this.resGet.body.description).toEqual(this.gallery_data.gallery.description);
     });
     
-    it('should should have a token in the response body that can be parsed and decoded', () => {
-      let tokenObj = Buffer.from(this.resGet.body.split('.')[1], 'base64').toString();
-      debug('tokenObj', tokenObj);
-      expect(JSON.parse(tokenObj).hasOwnProperty('jwt')).toBe(true);
+    it('should should have the id of the user making thr request in the body', () => {
+      expect(this.resGet.body.user_id.toString()).toEqual(this.gallery_data.user_data.user._id.toString());
     });
     
   });

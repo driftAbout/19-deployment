@@ -4,7 +4,6 @@ const debug = require('debug')('http:gallery-post-test');
 const server = require('../../lib/server');
 const superagent = require('superagent');
 const mock = require('../lib/mock');
-const Auth = require('../../model/auth');
 require('jest');
 
 describe('Gallery POST Integration', function() {
@@ -16,14 +15,7 @@ describe('Gallery POST Integration', function() {
   beforeAll(() => {
     return mock.gallery.new_gallery_data()
       .then(gallery_data => { 
-        this.gallery_data = gallery_data ;
-        // let user_id = this.gallery_data.user_data.user._id;
-        // let gallery_title = this.gallery_data.title;
-        // let gallery_description = this.gallery_data.description;
-        // this.user_token = this.gallery_data.user_data.user_token;
-        // let gallery_obj = {title: gallery_title, description: gallery_description, user_id: user_id};
-        // debug('gallery_obj', gallery_obj );
-        // return gallery_obj; 
+        this.gallery_data = gallery_data;
       });
   });
   
