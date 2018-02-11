@@ -11,19 +11,21 @@ describe('GET Integration', function() {
   afterAll(() => server.stop());
   afterAll(mock.removeUsers);
 
-  this.url = ':4000/api/v1';
+  this.url = `:${process.env.PORT}/api/v1`;
   
   describe('Valid requests', () => {
    
     beforeAll(() => {
-      this.user = mock.user;
-      return mock.createUser();
+      return mock.auth.createUser()
+        .then(data => {
+          this.user_data = data;
+        });
     });
   
     beforeAll(()=> {
-      debug('userinfo', `${this.user.username}:${this.user.password}`);
+      debug('userinfo', `${this.user_data.user.username}:${this.user_data.password}`);
       return  superagent.get(`${this.url}/signin`)
-        .auth(`${this.user.username}:${this.user.password}`)
+        .auth(`${this.user_data.user.username}:${this.user_data.password}`)
         .then( res => {
           this.resGet = res;
         })
@@ -48,4 +50,23 @@ describe('GET Integration', function() {
     
   });
 
+  describe('Invalid requests', () => {
+    it('should return a 404 for a bad route', () => {
+      return  superagent.get(`${this.url}/signinError`)
+        .catch(err => expect(err.status).toBe(404));
+    });
+
+    it('should return a 401 for an invalid username', () => {
+      return  superagent.get(`${this.url}/signin`)
+        .auth(`${this.user_data.user.username}error:${this.user_data.password}`)
+        .catch(err => expect(err.status).toBe(401));
+    });
+
+    it('should return a 401 for an invalid password', () => {
+      return  superagent.get(`${this.url}/signin`)
+        .auth(`${this.user_data.user.username}:${this.user_data.password}error`)
+        .catch(err => expect(err.status).toBe(401));
+    });
+
+  });
 });
