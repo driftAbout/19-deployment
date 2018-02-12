@@ -56,6 +56,24 @@ describe('PUT Integration', function() {
       expect(this.mock_data.title).toEqual(this.gallery.title);
       expect(this.mock_data.description).toEqual(this.gallery.description);
     });
+
+    beforeAll(() => {
+      this.half_mock_data = {description: 'Funkn-A'};
+      return  superagent.put(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
+        .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
+        .send(this.half_mock_data)
+        .then( res => {
+          this.resHalfPost = res;
+        })
+        .catch(err => {
+          debug('superagent error ', err);
+        });
+    });
+
+    it('should the data should change in the database when changing only one item', () => {
+      expect(this.mock_data.title).toEqual(this.gallery.title);
+      expect(this.half_mock_data.description).toEqual(this.gallery.description);
+    });
   
   });
 
@@ -83,10 +101,10 @@ describe('PUT Integration', function() {
     });
 
     it('should return status code 400 for a gallery put with out a proper body', () => {
-      return  superagent.put(`${this.url}/gallery/${this.new_gallery_data.gallery._id}`)
+      return  superagent.put(`${this.url}/gallery/${this.gallery_data.gallery._id}`)
         .set('Authorization', `Bearer ${this.gallery_data.user_data.user_token}`)
         .send({a: 'a', b: 'b'})
-        .catch(err => expect(err.status).toEqual(404));
+        .catch(err => expect(err.status).toEqual(400));
     });
 
   });
