@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const Gallery = mongoose.Schema({ 
   title: {type: String, required:true, unique: true }, 
   description: {type: String, required: true },  
-  user_id: {type: mongoose.Schema.Types.ObjectId , required: true, unique:true, ref: 'auth'},
+  user_id: {type: mongoose.Schema.Types.ObjectId , required: true, ref: 'auth'},
 },
 {timestamps: true}
 );
