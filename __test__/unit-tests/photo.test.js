@@ -1,56 +1,90 @@
 'use strict';
 
-const Gallery = require('../../model/gallery'); 
+const Photo = require('../../model/photo'); 
 const mock = require('../lib/mock');
-const debug = require('debug')('http:Auth-unit-test');
+const debug = require('debug')('http:Photo-unit-test');
 const server = require('../../lib/server');
-//const Auth = require('../../model/Auth'); 
+const superagent = require('superagent');
 
-describe('Gallery unit testing', function() {
+describe('Photo model unit testing', function() {
   beforeAll(() => server.start());
   afterAll(() => server.stop());
+  afterAll(() => mock.removeGalleries());   
+  afterAll(() => mock.removeUsers());
 
-  describe('Test object', function() {
+  describe('Valid input', function() {
   
     beforeAll(() => {
-      return mock.gallery.new_gallery_data()
-        .then(gallery_data => { 
-          this.gallery_data = gallery_data ;
-          let user_id = this.gallery_data.user_data.user._id;
-          let gallery_title = this.gallery_data.title;
-          let gallery_description = this.gallery_data.description;
-          this.user_token = this.gallery_data.user_data.user_token;
-          let gallery_obj = {title: gallery_title, description: gallery_description, user_id: user_id};
-          debug('gallery_obj', gallery_obj );
-          return gallery_obj; 
-        })
-        .then(gallery_obj => new Gallery(gallery_obj).save()) 
-        .then(gallery => {
-          debug('Gallery', gallery);
-          return this.gallery = gallery;
-        });
+      return mock.photo.create_photo()
+        .then(photo_data => this.photo_data = photo_data)
+        .catch(err => err);
     });
 
-    afterAll(() => mock.removeGalleries());   
-    afterAll(() => mock.removeUsers());
-    
-    it('should be an object', () => {
-      debug('Gallery',this.gallery);
-      expect (this.gallery).toBeInstanceOf(Object);
+    beforeAll(() => {
+      return Photo.findOne({user_id: this.photo_data.user_data.user._id, title: this.photo_data.title})
+        .then(photo => this.photo = photo)
+        .catch(console.error);
     });
 
-    it('should have an _id', () => {
-      expect (this.gallery._id.toString()).toMatch(/^[0-9a-fA-F]{24}$/);
+    beforeAll(() => {
+      return superagent.get(this.photo.image_url)
+        .then(res => this.awsGet = res)
+        .catch(err => err);
     });
 
-    it('should have an _id', () => {
-      expect (this.gallery.user_id).toEqual(this.gallery_data.user_data.user._id);
+    beforeAll(() => {
+      return this.photo.delete();
     });
 
-    it('should have properties with values', () => {
-      expect(this.gallery.title).not.toBeNull();
-      expect(this.gallery.description).not.toBeNull();
-      expect(this.gallery.user_id).not.toBeNull();
+    beforeAll(() => {
+      return superagent.get(this.photo.image_url)
+        .catch(err => this.awsErr = err);
+    });
+
+    beforeAll(() => {
+      return Photo.findOne({user_id: this.photo_data.user_data.user._id, title: this.photo_data.title})
+        .then(photo => this.del_photo = photo)
+        .catch(console.error);
+    });
+
+
+    it('should make an object in the database', () => {
+      debug('photo', this.photo);
+      expect(this.photo).toBeDefined();
+      expect(this.photo.title).toEqual(this.photo_data.title);
+      expect(this.photo.description).toEqual(this.photo_data.description);
+    });
+
+    it('should get uploaded to AWS', () => {
+      expect(this.awsGet.status).toBe(200);
+    });
+
+    it('should delete from the aws and the database', () => {
+      expect(this.awsErr.status).toBe(403);
+      expect(this.del_photo).toBeNull();
     });
   });
+
+  describe('inalid input', function() {
+
+    beforeAll(() => {
+      return Photo.upload({})
+        .catch(err => this.noFile = err);
+    });
+
+    beforeAll(() => {
+      return Photo.upload({file: 'file'})
+        .catch(err => this.noPath = err);
+    });
+
+    it('Should throw an error to upload with out data', () => {
+      expect(this.noFile.message).toMatch(/file data/i);
+    });
+
+    it('Should throw an error to upload with out data', () => {
+      expect(this.noPath.message).toMatch(/file path/i);
+    });
+
+  });
+
 });

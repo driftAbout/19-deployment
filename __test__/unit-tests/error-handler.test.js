@@ -24,4 +24,36 @@ describe('Error Handler unit testing', function() {
     expect(errRes.statusCode).toEqual(500);
     expect(errRes.message).toMatch(/Internal/i);
   });
+
+  it('should be return a status and message', () => {
+    let nwerr = new Error('casterror');
+    let errRes = error_handler(nwerr, this.res);
+    expect(errRes.statusCode).toEqual(400);
+  });
+  it('should be return a status and message', () => {
+    let nwerr = new Error('bad request');
+    let errRes = error_handler(nwerr, this.res);
+    expect(errRes.statusCode).toEqual(400);
+  });
+  it('should be return a status and message', () => {
+    let nwerr = new Error('path error');
+    let errRes = error_handler(nwerr, this.res);
+    expect(errRes.statusCode).toEqual(404);
+  });
+  it('should be return a status and message for multi-part error', () => {
+    let mpErr = new Error('multi-part');
+    let mpRes = error_handler(mpErr, this.res);
+    expect(mpRes.statusCode).toEqual(401);
+  });
+  it('should be return a status and message', () => {
+    let nwerr = new Error('authorization');
+    let errRes = error_handler(nwerr, this.res);
+    expect(errRes.statusCode).toEqual(401);
+  });
+  it('should be return a status and message', () => {
+    let nwerr = new Error('duplicate key error');
+    let errRes = error_handler(nwerr, this.res);
+    expect(errRes.statusCode).toEqual(409);
+  });
+  
 });
