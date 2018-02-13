@@ -12,7 +12,7 @@ describe('Auth POST Integration', function() {
   afterAll(() => server.stop());
   afterAll(mock.removeUsers);
   
-  this.url = ':4000/api/v1';
+  this.url = `:${process.env.PORT}/api/v1`;
   
   describe('Valid requests', () => {
 
